@@ -1,0 +1,1 @@
+regras que os agentes vão ter de seguir
