@@ -50,7 +50,7 @@ Todos os membros da equipa desempenham ativamente a função de **Developer**, a
 * **Gestão de Projeto & Backlog:** [Jira Backlog]([URL_A_DEFINIR])
 * **Ambiente de Produção / Aplicação:** [Möber Deployed Application]([URL_A_DEFINIR])
 * **Documentação de Engenharia & APIs:** [OpenAPI / Swagger UI Documentation]([URL_A_DEFINIR])
-* **Qualidade de Código & Análise Estática:** [SonarQube Dashboard]([URL_A_DEFINIR])
+* **Qualidade de Código & Análise Estática:** [Dashboard do Mober no SonarQube Cloud](https://sonarcloud.io/dashboard?id=Mober-TQS_Mober)
 * **Observabilidade & Métricas:** [Grafana & Prometheus Dashboard]([URL_A_DEFINIR])
 * **Relatório de Especificação de Produto:** [Product Specification Report (PDF)]([URL_A_DEFINIR])
 * **Manual de Garantia de Qualidade:** [Quality Assurance Manual (PDF)]([URL_A_DEFINIR])
