@@ -1,9 +1,34 @@
 # Möber
 
+[![Backend CI](https://github.com/Mober-TQS/Mober/actions/workflows/backend-ci.yml/badge.svg?branch=main)](https://github.com/Mober-TQS/Mober/actions/workflows/backend-ci.yml)
+
 ## 1. Project Abstract
 
 O **Möber** é uma plataforma de mobilidade suave no modelo *Fleet-as-a-Service* (FaaS), projetada especificamente para responder às exigências operacionais de estafetas de entregas urbanas (trabalhadores de plataformas como a Uber
 Eats). Ao contrário de sistemas urbanos convencionais focados em deslocações esporádicas, o Möber oferece um serviço contínuo orientado a turnos de trabalho prolongados e sem interrupções.
+
+### Executar o backend
+
+Com o JDK 21 instalado, executa a partir da raiz do repositório:
+
+```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+Com a aplicação em execução, consulta o estado num segundo terminal:
+
+```bash
+curl -i http://localhost:8080/api/status
+```
+
+A resposta esperada tem o código HTTP `200` e o corpo JSON `{"status":"ok"}`.
+
+Para parar a aplicação, usa `Ctrl+C` no primeiro terminal. Nesse terminal, ainda na pasta `backend/`, executa os testes e gera o JAR com o mesmo objetivo Maven usado no CI:
+
+```bash
+./mvnw clean verify
+```
 
 ---
 
