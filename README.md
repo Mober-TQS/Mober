@@ -37,11 +37,11 @@ Para parar a aplicação, usa `Ctrl+C` no primeiro terminal. Nesse terminal, ain
 Todos os membros da equipa desempenham ativamente a função de **Developer**, acumulando as responsabilidades de liderança e garantia de qualidade definidas no âmbito da metodologia de engenharia de software do projeto:
 
 | Nome | Número Mec. | Papel |
-| :--- | :---: | :--- | :--- |
+| :--- | :---: | :--- |
 | `Vitalie Bologa` | `107854` | **Team Coordinator** |
 | `Tiago Costa` | `125943` | **Product Owner** |
 | `Filipe Nogueira` | `119495` | **QA Engineer** |
-| `Margarida Cardoso` | `[Número Mec.]` | **DevOps Master** |
+| `Margarida Cardoso` | `125799` | **DevOps Master** |
 
 ---
 
