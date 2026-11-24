@@ -1,0 +1,148 @@
+--------------------------------------------------------------------------------
+ÉPICO 1: Gestão de Utilizadores e Autenticação
+--------------------------------------------------------------------------------
+Iterações: I1 – I2
+Datas Planeadas: 13/11/2026 a 26/11/2026
+
+Problema:
+Necessidade de garantir o acesso controlado, seguro e diferenciado à plataforma, evitando acessos não autorizados e garantindo que cada interveniente tenha opere estritamente segundo as permissões do seu perfil.
+
+Outcome:
+Módulo de autenticação e gestão de utilizadores funcional e seguro com RBAC.
+
+Âmbito:
+- Implementação de endpoints seguros de registo e login com validação de credenciais e emissão/renovação de tokens JWT.
+- Vistas do front-end com base no perfil ativo.
+- Password encriptada e validação de formato de email e dados obrigatórios.
+
+
+--------------------------------------------------------------------------------
+ÉPICO 2: Gestão de Hubs e Inventário de Frota
+--------------------------------------------------------------------------------
+Iterações: I1 – I2
+Datas Planeadas: 13/11/2026 a 26/11/2026
+
+Problema:
+Necessidade de criar, mapear e controlar os postos físicos de carregamento (hubs) e as bicicletas da frota, saber em tempo real quantas vagas livres existem em cada hub e em que estado do ciclo de vida cada veículo se encontra.
+
+Outcome:
+Sub-sistema de gestão de infraestrutura operacional capaz de registar hubs (localização, capacidade total e vagas livres) e bicicletas, sem conflitos com a máquina de estados de cada bicicleta.
+
+Âmbito:
+- Operações de CRUD para hubs (coordenadas geográficas, lotação máxima e vagas).
+- Operações de CRUD para bicicletas elétricas associadas a identificadores únicos.
+- Máquina de estados formal de veículo implementada no back-end, impedindo transições inválidas.
+- Atualização atómica do número de bicicletas e vagas em cada hub quando um veículo é levantado ou entregue.
+
+
+--------------------------------------------------------------------------------
+ÉPICO 3: Encontrar Bicicletas e Reservar Bicicletas Previamente
+--------------------------------------------------------------------------------
+Iterações: I2 – I3
+Datas Planeadas: 20/11/2026 a 03/12/2026
+
+Problema:
+O estafeta precisa de garantir que tem uma bicicleta com autonomia suficiente disponível antes de se deslocar ao posto, evitando viagens em vão e garantindo que a bicicleta fica reservada exclusivamente para si por um período razoável.
+
+Outcome:
+Interface e lógica de reserva prévia onde o utilizador consulta hubs, visualiza bicicletas com autonomia suficiente, efetua a reserva garantida durante 30 minutos com retenção de caução e recebe confirmação com cronómetro de levantamento.
+
+Âmbito:
+- Regra de negócio estrita: apenas bicicletas no estado 'Available' e com bateria >= 60% podem ser reservadas.
+- Limite de 1 reserva ativa em simultâneo por utilizador.
+- Temporizador de reserva de 30 minutos: se o utilizador não desbloquear a bicicleta dentro do prazo, a reserva expira automaticamente, a bicicleta volta a 'Available' e a caução de reserva não é reembolsada.
+
+
+--------------------------------------------------------------------------------
+ÉPICO 4: Ingestão de Telemetria e Simulador IoT
+--------------------------------------------------------------------------------
+Iterações: I2 – I3
+Datas Planeadas: 20/11/2026 a 03/12/2026
+
+Problema:
+A plataforma necessita de acompanhar os dados vitais dos veículos em movimento (bateria, coordenadas GPS) sem acoplamento direto a hardware físico.
+
+Outcome:
+Serviço de ingestão contínua de telemetria desacoplado, consome dados do contentor simulador de frota (via MQTT/broker ou REST), persistindo leituras e propagando eventos críticos para a plataforma.
+
+Âmbito:
+- Contentor isolado para o simulador de frota que gera periodicamente telemetria (nível de bateria, coordenadas de localização, estado de trancamento, avarias, etc).
+- Atualização em tempo real do nível de bateria e localização de cada veículo na base de dados e interfaces ativas.
+
+
+--------------------------------------------------------------------------------
+ÉPICO 5: Operação em Viagem e Proteção do Utilizador
+--------------------------------------------------------------------------------
+Iterações: I3 – I4
+Datas Planeadas: 27/11/2026 a 10/12/2026
+
+Problema:
+Um estafeta necessita de flexibilidade durante o turno de trabalho para desbloquear o veículo, parar momentaneamente a viagem em segurança enquanto recolhe ou entrega refeições dentro de edifícios, receber avisos antecipados de bateria e terminar a viagem sem bloqueios num hub com vaga.
+
+Outcome:
+Fluxo completo de viagem em tempo real na app do estafeta, com desbloqueio digital, modo de pausa/bloqueio temporário (trancando motor e rodas), alertas automáticos de bateria a 10%, corte preventivo de assistência de motor aos 5% e encerramento com devolução num hub válido.
+
+Âmbito:
+- Desbloqueio do veículo no hub dá início à viagem (estado passa para 'In Use').
+- Botão "Bloqueio Temporário / Pausa": tranca temporariamente a bicicleta (motor inativo) mantendo a viagem em curso para proteção contra furto durante recolhas.
+- Regra de autonomia 10%: envio de alerta visual ao estafeta com sugestão de hubs próximos com bicicletas carregadas para troca.
+- Regra de proteção 5%: motor elétrico é desligado automaticamente para preservar a bateria para os serviços essenciais (GPS e comunicação).
+- Encerramento de viagem validado: devolução apenas permitida num hub com vagas disponíveis.
+
+
+--------------------------------------------------------------------------------
+ÉPICO 6: Faturação Dinâmica e Pagamentos por Quilómetro
+--------------------------------------------------------------------------------
+Iterações: I3 – I4
+Datas Planeadas: 27/11/2026 a 10/12/2026
+
+Problema:
+Cobranças por minuto penalizam utilizadores parados no trânsito ou, por exemplo, estafetas à espera em restaurantes. É indispensável implementar um modelo justo de faturação estritamente por quilómetro percorrido com registo seguro de pagamentos e caução em ambiente de sandbox.
+
+Outcome:
+Motor de cálculo tarifário por distância com integração a uma gateway de pagamentos simulada, calculando o custo total do trajeto, deduzindo o valor da caução de reserva e gerando o extrato detalhado para o estafeta.
+
+Âmbito:
+- Cálculo da distância total percorrida através das coordenadas GPS validadas do trajeto.
+- Aplicação da fórmula tarifária: Custo = Distância (km) * Preço/km.
+- Dedução automática do montante retido na reserva prévia; caso a viagem exceda a caução, o remanescente é debitado; caso a reserva tenha expirado por não comparência, a taxa é retida na íntegra.
+- Histórico de viagens e faturas acessível no dashboard do estafeta.
+
+
+--------------------------------------------------------------------------------
+ÉPICO 7: Gestão de Avarias e Manutenção
+--------------------------------------------------------------------------------
+Iterações: I4 – I5
+Datas Planeadas: 04/12/2026 a 14/12/2026
+
+Problema:
+Veículos avariados ou danificados podem comprometer a segurança do utilizador e a qualidade do serviço. É imperativo permitir o reporte imediato, imobilizar a bicicleta para novos utilizadores e gerir a intervenção técnica com prazos.
+
+Outcome:
+Módulo de gestão de incidentes onde utilizadores reportam anomalias na aplicação, o veículo é automaticamente marcado como 'Maintenance', e é gerado um ticket de reparação atribuído aos técnicos com fluxo de resolução.
+
+Âmbito:
+- Formulário na aplicação do estafeta para reportar avarias (categoria do problema, descrição e foto opcional), quer durante a viagem quer no momento de entrega no hub.
+- Ao submeter um reporte crítico, o estado da bicicleta transita imediatamente para 'Maintenance' e o veículo deixa de poder ser reservado ou levantado.
+- Criação automática de ticket de intervenção com data limite calculada segundo as metas operacionais de manutenção.
+- Interface dedicada para Técnicos de Manutenção: listar tickets pendentes, aceitar ordem de serviço, registar peças/ações e marcar como reparada (repondo veículo em 'Available').
+- Testes de regras de negócio a verificar bloqueio imediato pós-reporte e testes BDD a validar o ciclo de vida do ticket de manutenção.
+
+
+--------------------------------------------------------------------------------
+ÉPICO 8: Backoffice de Gestão e Monitorização Operacional (KPIs e SLOs)
+--------------------------------------------------------------------------------
+Iterações: I4 – I5
+Datas Planeadas: 04/12/2026 a 15/12/2026
+
+Problema:
+Necessidade da administração e da equipa de operações disporem de uma plataforma centralizada de monitorização para acompanhar em tempo real a rentabilidade financeira da frota, o cumprimento das metas operacionais internas (tempos de manutenção) e a fiabilidade técnica da infraestrutura IoT (SLOs).
+
+Outcome:
+Consola analítica web de backoffice protegida por RBAC (acesso restrito à Administração e Gestores de Operação), agregando dashboards interativos com métricas de negócio e faturação em tempo real, controlo de KPIs operacionais da frota e indicadores de fiabilidade técnica da plataforma.
+
+Âmbito:
+- Painel Web dedicado e responsivo, com controlo de acessos RBAC restrito aos perfis de Administrador e Gestor de Operação.
+- Dashboard de rentabilidade e utilização da frota com métricas de volume de viagens, km faturados, rácio de tempo 'In Use' vs. 'Available' e deteção de hubs críticos ou com bicicletas subutilizadas.
+- Dashboard de monitorização de KPIs operacionais com acompanhamento da taxa de disponibilidade da frota e tempos médios de reparação de avarias.
+- Dashboard de saúde e fiabilidade técnica com métricas de atraso na ingestão de telemetria IoT e latência/taxa de erro das APIs críticas.
