@@ -1,0 +1,65 @@
+# Möber Delivery Fleet Trips scenario: couriers actively moving between delivery hubs.
+# Generates continuous in-motion telemetry (changing positions, speeds, discharging batteries).
+fleetId: mober-fleet-01
+
+simulation:
+  emissionIntervalSeconds: 10   # one reading per vehicle every 10 s
+  seed: 42                      # reproducible runs for testing
+  faultProbability: 0.01        # chance of random fault
+  drainPercentPerMinute: 0.5    # battery consumption while riding
+  chargePercentPerMinute: 0.6   # battery recharged while parked at a hub
+  tripProbability: 0.05         # chance per reading that a parked bike leaves on an order delivery
+  rideSpeedKmh: 18              # typical courier urban e-bike delivery speed
+
+hubs:
+  - id: hub-glicinias
+    name: Centro Comercial Glicinias Plaza
+    position: { lat: 40.6272, lon: -8.6471 }
+  - id: hub-forum
+    name: Forum Aveiro
+    position: { lat: 40.6412, lon: -8.6501 }
+  - id: hub-estacao
+    name: Estacao Ferroviaria de Aveiro
+    position: { lat: 40.6443, lon: -8.6455 }
+  - id: hub-universidade
+    name: Universidade de Aveiro - Campus Santiago
+    position: { lat: 40.6304, lon: -8.6577 }
+  - id: hub-hospital
+    name: Hospital Infante D. Pedro
+    position: { lat: 40.6358, lon: -8.6492 }
+  - id: hub-cais
+    name: Cais da Fonte Nova
+    position: { lat: 40.6392, lon: -8.6442 }
+
+vehicles:
+  # hub-glicinias
+  - { id: mober-bike-0001, type: E_BIKE, hub: hub-glicinias, battery: 95 }
+  - { id: mober-bike-0002, type: E_BIKE, hub: hub-glicinias, battery: 88 }
+  - { id: mober-bike-0003, type: E_BIKE, hub: hub-glicinias, battery: 74 }
+  - { id: mober-bike-0004, type: E_BIKE, hub: hub-glicinias, battery: 18 }
+
+  # hub-forum
+  - { id: mober-bike-0005, type: E_BIKE, hub: hub-forum, battery: 100 }
+  - { id: mober-bike-0006, type: E_BIKE, hub: hub-forum, battery: 82 }
+  - { id: mober-bike-0007, type: E_BIKE, hub: hub-forum, battery: 45 }
+  - { id: mober-bike-0008, type: E_BIKE, hub: hub-forum, battery: 15 }
+
+  # hub-estacao
+  - { id: mober-bike-0009, type: E_BIKE, hub: hub-estacao, battery: 90 }
+  - { id: mober-bike-0010, type: E_BIKE, hub: hub-estacao, battery: 78 }
+  - { id: mober-bike-0011, type: E_BIKE, hub: hub-estacao, battery: 25 }
+  - { id: mober-bike-0012, type: E_BIKE, hub: hub-estacao, battery: 9 }
+
+  # hub-universidade
+  - { id: mober-bike-0013, type: E_BIKE, hub: hub-universidade, battery: 85 }
+  - { id: mober-bike-0014, type: E_BIKE, hub: hub-universidade, battery: 71 }
+  - { id: mober-bike-0015, type: E_BIKE, hub: hub-universidade, battery: 50 }
+  - { id: mober-bike-0016, type: E_BIKE, hub: hub-universidade, battery: 5 }
+
+  # hub-hospital
+  - { id: mober-bike-0017, type: E_BIKE, hub: hub-hospital, battery: 92 }
+  - { id: mober-bike-0018, type: E_BIKE, hub: hub-hospital, battery: 60 }
+
+  # hub-cais
+  - { id: mober-bike-0019, type: E_BIKE, hub: hub-cais, battery: 80 }
+  - { id: mober-bike-0020, type: E_BIKE, hub: hub-cais, battery: 19 }
