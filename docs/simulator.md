@@ -33,8 +33,7 @@ Substituiu-se a frota genérica de demonstração por uma frota de entregas pers
   * `mober-bike-0004`: Falha de travões (`BRAKE_WEAR`) injetada aos **40 segundos**, com resolução/reparação automática após **120 segundos** (ou seja, aos **160 segundos** do simulador).
   * `mober-bike-0016`: Sobreaquecimento crítico de bateria (`BATTERY_OVERHEAT`) injetado aos **80 segundos**, mantendo-se ativa para testar ordens de manutenção permanentes.
 
-### 2.4. Atualização de Exemplos e Documentação
-* Ficheiro de exemplo `simulator/examples/scenario.yml` revisto para alinhar com a nomenclatura `mober-fleet-01`, postos de Aveiro e identificadores `mober-bike-0001` / `mober-bike-0002`.
+### 2.4. Documentação e Requisitos
 * Requisitos formais e épicos do projeto organizados na pasta `docs/`.
 
 ---
