@@ -4,57 +4,44 @@
 
 ## Índice
 
-1. [SLO-01: Acessibilidade da Interface Web (UI)](#slo-01-acessibilidade-da-interface-web-ui)
-2. [SLO-02: Velocidade e Fluidez da Interface Web](#slo-02-velocidade-e-fluidez-da-interface-web)
-3. [SLO-03: Autenticação, Sessão e Permissões (RBAC)](#slo-03-autenticação-sessão-e-permissões-rbac)
-4. [SLO-04: Disponibilidade Global e Resistência sob Carga da API](#slo-04-disponibilidade-global-e-resistência-sob-carga-da-api)
-5. [SLO-05: Descoberta de Frota e Mapa de Postos (Hubs)](#slo-05-descoberta-de-frota-e-mapa-de-postos-hubs)
-6. [SLO-06: Gestão de Reservas, Trocas e Expiração](#slo-06-gestão-de-reservas-trocas-e-expiração)
-7. [SLO-07: Mudanças de Estado, Devoluções e Reparações](#slo-07-mudanças-de-estado-devoluções-e-reparações)
-8. [SLO-08: Pagamentos, Cauções e Faturação por Km](#slo-08-pagamentos-cauções-e-faturação-por-km)
-9. [SLO-09: Telemetria MQTT, Gestão de Bateria e Métricas](#slo-09-telemetria-mqtt-gestão-de-bateria-e-métricas)
+1. [SLO-01: Velocidade e Fluidez da Interface Web](#slo-01-velocidade-e-fluidez-da-interface-web)
+2. [SLO-02: Autenticação, Sessão e Permissões (RBAC)](#slo-02-autenticação-sessão-e-permissões-rbac)
+3. [SLO-03: Disponibilidade Global e Resistência sob Carga da API](#slo-03-disponibilidade-global-e-resistência-sob-carga-da-api)
+4. [SLO-04: Descoberta de Frota e Mapa de Postos (Hubs)](#slo-04-descoberta-de-frota-e-mapa-de-postos-hubs)
+5. [SLO-05: Gestão de Reservas, Trocas e Expiração](#slo-05-gestão-de-reservas-trocas-e-expiração)
+6. [SLO-06: Mudanças de Estado, Devoluções e Reparações](#slo-06-mudanças-de-estado-devoluções-e-reparações)
+7. [SLO-07: Pagamentos, Cauções e Faturação por Km](#slo-07-pagamentos-cauções-e-faturação-por-km)
+8. [SLO-08: Telemetria MQTT, Gestão de Bateria e Métricas](#slo-08-telemetria-mqtt-gestão-de-bateria-e-métricas)
 
 ---
 
-## SLO-01: Acessibilidade da Interface Web (UI)
-
-* **O que garante:** A aplicação é utilizável por qualquer pessoa, incluindo pessoas com deficiências ou em condições difíceis de rua (ecrãs sob sol intenso, uso com luvas).
-* **Regras principais:**
-  * **Zero erros graves:** Conformidade WCAG 2.1 AA sem violações críticas/sérias no validador automático (`axe-core`).
-  * **Navegação a 100% por teclado:** Capacidade de usar o sistema apenas com `Tab`, `Enter` e `Esc`, com foco visualmente destacado e sem ficar bloqueado em campos.
-  * **Alvos táteis mínimos:** Todos os botões e áreas de toque no ecrã móvel têm pelo menos $44 \times 44\text{ px}$.
-* **Critério de rejeição (CI/Release):** A build é bloqueada de imediato se surgir 1 erro grave de acessibilidade ou falha nos fluxos de teclado.
-
----
-
-## SLO-02: Velocidade e Fluidez da Interface Web
+## SLO-01: Velocidade e Fluidez da Interface Web
 
 * **O que garante:** Carregamento célere das páginas e desenho imediato dos marcadores no mapa.
 * **Limites máximos:**
   * **App móvel (4G urbana simulada):** Conteúdo principal visível em $\le 2{,}5\text{ s}$.
   * **Portal de operações (desktop):** Conteúdo principal visível em $\le 2{,}0\text{ s}$.
   * **Pinos no mapa:** Marcadores aparecem no ecrã em $\le 1{,}5\text{ s}$ após resposta da API.
-* **Critério de rejeição (CI):** Reprova a build se a mediana dos testes de velocidade exceder estes limiares.
+* **Critério de rejeição:** Reprova a build se a mediana dos testes de velocidade exceder estes limiares.
 
 ---
 
-## SLO-03: Autenticação, Sessão e Permissões (RBAC)
+## SLO-02: Autenticação, Sessão e Permissões (RBAC)
 
 * **O que garante:** Processo de início de sessão seguro contra ataques, sessões estáveis para turnos de trabalho completos e verificação rigorosa de perfis.
 * **Regras principais:**
   * **Login seguro e célere:** Encriptação de palavras-passe, respondendo em $\le 1{,}0\text{ s}$ no percentil 95 ($p95$).
-  * **Turno ininterrupto:** As sessões de trabalho duram pelo menos $8\text{ h}$ sem desligar o utilizador.
   * **Validação instantânea:** O servidor valida os direitos de acesso em $\le 0{,}1\text{ s}$ ($100\text{ ms}$).
   * **Bloqueio total:** Rejeição rigorosa de contas suspensas ou acessos indevidos (códigos 401, 403 e 423).
 * **Critério de rejeição:** A build chumba se ocorrer qualquer erro de servidor (`5xx`) no login ou se forem detetadas falhas de fuga de dados entre utilizadores.
 
 ---
 
-## SLO-04: Disponibilidade Global e Resistência sob Carga da API
+## SLO-03: Disponibilidade Global e Resistência sob Carga da API
 
 * **O que garante:** Os serviços mantêm-se online e rápidos mesmo durante picos repentinos de reservas e entregas.
 * **Metas de desempenho:**
-  * **Disponibilidade mensal:** No ar durante $\ge 99{,}9\%$ do tempo (máximo de 43 minutos de indisponibilidade por mês).
+  * **Disponibilidade mensal:** No ar durante $\ge 99{,}9\%$ do tempo.
   * **Sob tráfego normal:** Criar reservas (`POST /bookings`) responde em $< 500\text{ ms}$ sem erros `5xx`.
   * **Sob picos súbitos de carga (150 a 200 utilizadores em simultâneo):**
     * Erros de servidor contidos abaixo de $1{,}0\%$.
@@ -64,7 +51,7 @@
 
 ---
 
-## SLO-05: Descoberta de Frota e Mapa de Postos (Hubs)
+## SLO-04: Descoberta de Frota e Mapa de Postos (Hubs)
 
 * **O que garante:** Os utilizadores encontram bicicletas e postos livres no mapa sem demoras e com informação atualizada.
 * **Regras principais:**
@@ -76,7 +63,7 @@
 
 ---
 
-## SLO-06: Gestão de Reservas, Trocas e Expiração
+## SLO-05: Gestão de Reservas, Trocas e Expiração
 
 * **O que garante:** Ninguém fica com a mesma bicicleta ao mesmo tempo e os prazos são cumpridos à risca.
 * **Regras principais:**
@@ -88,7 +75,7 @@
 
 ---
 
-## SLO-07: Mudanças de Estado, Devoluções e Reparações
+## SLO-06: Mudanças de Estado, Devoluções e Reparações
 
 * **O que garante:** Controlo rigoroso de cada fase da viagem (bloquear, desbloquear, avariar, devolver) e respeito pela lotação física dos postos.
 * **Regras principais:**
@@ -100,7 +87,7 @@
 
 ---
 
-## SLO-08: Pagamentos, Cauções e Faturação por Km
+## SLO-07: Pagamentos, Cauções e Faturação por Km
 
 * **O que garante:** Cobranças sem enganos, sem cobranças duplicadas por falhas de rede e cálculo justo da viagem.
 * **Regras principais:**
@@ -112,7 +99,7 @@
 
 ---
 
-## SLO-09: Telemetria MQTT, Gestão de Bateria e Métricas
+## SLO-08: Telemetria MQTT, Gestão de Bateria e Métricas
 
 * **O que garante:** O sistema recebe continuamente a posição e saúde das bicicletas e protege a integridade das baterias.
 * **Regras principais:**
