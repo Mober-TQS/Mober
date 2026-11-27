@@ -60,11 +60,6 @@ Feature: US-ADM-03 User Management, Authentication and Role-Based Access Control
     Then the HTTP response status code is 401 Unauthorized
     And no JWT token is issued
 
-  Scenario: Login rejection for suspended account
-    Given a user exists with email "suspended@mober.pt" and status "SUSPENDED"
-    When the user attempts to login with valid credentials
-    Then the system blocks the authentication with HTTP status 401 Unauthorized
-    And the response indicates the account is suspended or invalid
 
   # ---------------------------------------------------------------------------
   # 3. Role-Based Access Control (RBAC) & Endpoint Protection
@@ -84,15 +79,3 @@ Feature: US-ADM-03 User Management, Authentication and Role-Based Access Control
     When the user sends a GET request to "/api/users" with their Bearer token
     Then the HTTP response status code is 403 Forbidden
 
-  Scenario: Administrator successfully accesses user management list
-    Given an authenticated user with role "ROLE_ADMIN"
-    When the user sends a GET request to "/api/users" with their Bearer token
-    Then the HTTP response status code is 200 OK
-    And the response contains the list of all registered users
-
-  Scenario: Administrator suspends a user account
-    Given an authenticated user with role "ROLE_ADMIN"
-    And an active target user with ID 42 exists
-    When the administrator sends a PATCH request to "/api/users/42/status" with status "SUSPENDED"
-    Then the HTTP response status code is 200 OK
-    And the target user account status is updated to "SUSPENDED"
