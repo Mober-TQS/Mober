@@ -33,14 +33,7 @@ Substituiu-se a frota genérica de demonstração por uma frota de entregas pers
   * `mober-bike-0004`: Falha de travões (`BRAKE_WEAR`) injetada aos **40 segundos**, com resolução/reparação automática após **120 segundos** (ou seja, aos **160 segundos** do simulador).
   * `mober-bike-0016`: Sobreaquecimento crítico de bateria (`BATTERY_OVERHEAT`) injetado aos **80 segundos**, mantendo-se ativa para testar ordens de manutenção permanentes.
 
-### 2.4. Criação do Cenário Dinâmico de Viagens (`scenarios/mober-trips.yml`)
-* Adicionado cenário para testar viagens ativas e movimento contínuo dos estafetas:
-  * `tripProbability: 0.05`: probabilidade de 5% por ciclo de uma bicicleta livre iniciar entrega.
-  * `rideSpeedKmh: 18`: velocidade de deslocação realista de estafetas urbanos ($18\text{ km/h}$).
-  * `drainPercentPerMinute: 0.5`: taxa de consumo de bateria em andamento ($0.5\%$ por minuto).
-  * `chargePercentPerMinute: 0.6`: taxa de carregamento quando estacionada e trancada num hub ($0.6\%$ por minuto).
-
-### 2.5. Atualização de Exemplos e Documentação
+### 2.4. Atualização de Exemplos e Documentação
 * Ficheiro de exemplo `simulator/examples/scenario.yml` revisto para alinhar com a nomenclatura `mober-fleet-01`, postos de Aveiro e identificadores `mober-bike-0001` / `mober-bike-0002`.
 * Requisitos formais e épicos do projeto organizados na pasta `docs/`.
 
