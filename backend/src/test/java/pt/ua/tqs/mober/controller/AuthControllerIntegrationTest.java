@@ -17,6 +17,7 @@ import pt.ua.tqs.mober.model.User;
 import pt.ua.tqs.mober.repository.UserRepository;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -128,5 +129,52 @@ class AuthControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getMeWithoutTokenReturnsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/users/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getMeWithCourierTokenReturnsProfile() throws Exception {
+        User courierUser = new User("André Estafeta", "estafeta@mober.pt", passwordEncoder.encode("Password123!"), Role.ROLE_COURIER);
+        courierUser = userRepository.save(courierUser);
+
+        String loginBody = objectMapper.writeValueAsString(new LoginRequest("estafeta@mober.pt", "Password123!"));
+        String responseJson = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginBody))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String token = objectMapper.readTree(responseJson).get("token").asText();
+
+        mockMvc.perform(get("/api/users/me")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email", is("estafeta@mober.pt")))
+                .andExpect(jsonPath("$.role", is("ROLE_COURIER")))
+                .andExpect(jsonPath("$.password").doesNotExist());
+    }
+
+    @Test
+    void getAllUsersWithCourierTokenReturnsForbidden() throws Exception {
+        User courierUser = new User("André Estafeta", "estafeta@mober.pt", passwordEncoder.encode("Password123!"), Role.ROLE_COURIER);
+        courierUser = userRepository.save(courierUser);
+
+        String loginBody = objectMapper.writeValueAsString(new LoginRequest("estafeta@mober.pt", "Password123!"));
+        String responseJson = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(loginBody))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        String token = objectMapper.readTree(responseJson).get("token").asText();
+
+        mockMvc.perform(get("/api/users")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
     }
 }

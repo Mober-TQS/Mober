@@ -12,7 +12,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import pt.ua.tqs.mober.model.User;
-import pt.ua.tqs.mober.model.UserStatus;
 import pt.ua.tqs.mober.repository.UserRepository;
 
 import java.io.IOException;
@@ -52,7 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (userOpt.isPresent()) {
                     User user = userOpt.get();
-                    if (user.getStatus() == UserStatus.ACTIVE && jwtService.isTokenValid(token, user)) {
+                    if (jwtService.isTokenValid(token, user)) {
                         SimpleGrantedAuthority authority = new SimpleGrantedAuthority(user.getRole().name());
                         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                                 user.getEmail(),

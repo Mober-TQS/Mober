@@ -1,7 +1,6 @@
 package pt.ua.tqs.mober.model;
 
 import jakarta.persistence.*;
-import java.time.Instant;
 
 @Entity
 @Table(name = "users")
@@ -24,13 +23,6 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserStatus status = UserStatus.ACTIVE;
-
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
-
     public User() {
     }
 
@@ -39,8 +31,6 @@ public class User {
         this.email = email;
         this.password = password;
         this.role = role;
-        this.status = UserStatus.ACTIVE;
-        this.createdAt = Instant.now();
     }
 
     public Long getId() {
@@ -81,21 +71,5 @@ public class User {
 
     public void setRole(Role role) {
         this.role = role;
-    }
-
-    public UserStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(UserStatus status) {
-        this.status = status;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
     }
 }

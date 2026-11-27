@@ -8,10 +8,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 import pt.ua.tqs.mober.dto.AuthResponse;
 import pt.ua.tqs.mober.dto.LoginRequest;
 import pt.ua.tqs.mober.dto.RegisterRequest;
-import pt.ua.tqs.mober.exception.DuplicateEmailException;
+import pt.ua.tqs.mober.dto.UserResponse;
 import pt.ua.tqs.mober.model.Role;
 import pt.ua.tqs.mober.model.User;
 import pt.ua.tqs.mober.repository.UserRepository;
@@ -88,7 +89,7 @@ class AuthServiceTest {
 
         when(userRepository.existsByEmail("andre@mober.pt")).thenReturn(true);
 
-        assertThrows(DuplicateEmailException.class, () -> authService.register(request));
+        assertThrows(ResponseStatusException.class, () -> authService.register(request));
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -124,5 +125,23 @@ class AuthServiceTest {
         when(passwordEncoder.matches("WrongPassword", "encoded_secret")).thenReturn(false);
 
         assertThrows(BadCredentialsException.class, () -> authService.login(request));
+    }
+
+    @Test
+    void getProfileSuccess() {
+        when(userRepository.findByEmail("andre@mober.pt")).thenReturn(Optional.of(sampleUser));
+
+        UserResponse response = authService.getProfile("andre@mober.pt");
+
+        assertNotNull(response);
+        assertEquals("andre@mober.pt", response.email());
+        assertEquals(Role.ROLE_COURIER, response.role());
+    }
+
+    @Test
+    void getProfileNotFoundThrowsException() {
+        when(userRepository.findByEmail("unknown@mober.pt")).thenReturn(Optional.empty());
+
+        assertThrows(ResponseStatusException.class, () -> authService.getProfile("unknown@mober.pt"));
     }
 }

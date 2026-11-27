@@ -29,10 +29,10 @@ class JwtServiceTest {
         assertFalse(token.isBlank());
 
         String email = jwtService.extractEmail(token);
-        Role role = jwtService.extractRole(token);
+        String role = jwtService.extractAllClaims(token).get("role", String.class);
 
         assertEquals("carlos@mober.pt", email);
-        assertEquals(Role.ROLE_OPERATOR, role);
+        assertEquals(Role.ROLE_OPERATOR.name(), role);
     }
 
     @Test

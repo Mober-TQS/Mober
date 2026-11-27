@@ -3,14 +3,15 @@ package pt.ua.tqs.mober.controller;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import pt.ua.tqs.mober.dto.AuthResponse;
 import pt.ua.tqs.mober.dto.LoginRequest;
 import pt.ua.tqs.mober.dto.RegisterRequest;
+import pt.ua.tqs.mober.dto.UserResponse;
 import pt.ua.tqs.mober.service.AuthService;
 
 @RestController
-@RequestMapping("/api/auth")
 public class AuthController {
 
     private final AuthService authService;
@@ -19,15 +20,20 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/register")
+    @PostMapping("/api/auth/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         AuthResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/login")
+    @PostMapping("/api/auth/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/api/users/me")
+    public ResponseEntity<UserResponse> getCurrentUser(Authentication authentication) {
+        return ResponseEntity.ok(authService.getProfile(authentication.getName()));
     }
 }
