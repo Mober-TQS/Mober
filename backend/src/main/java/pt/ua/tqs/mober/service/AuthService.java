@@ -10,7 +10,6 @@ import pt.ua.tqs.mober.dto.RegisterRequest;
 import pt.ua.tqs.mober.exception.DuplicateEmailException;
 import pt.ua.tqs.mober.model.Role;
 import pt.ua.tqs.mober.model.User;
-import pt.ua.tqs.mober.model.UserStatus;
 import pt.ua.tqs.mober.repository.UserRepository;
 import pt.ua.tqs.mober.security.JwtService;
 
@@ -49,10 +48,6 @@ public class AuthService {
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new BadCredentialsException("Invalid email or password");
-        }
-
-        if (user.getStatus() == UserStatus.SUSPENDED) {
-            throw new BadCredentialsException("Account is suspended");
         }
 
         String token = jwtService.generateToken(user);

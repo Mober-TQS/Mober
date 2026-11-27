@@ -14,7 +14,6 @@ import pt.ua.tqs.mober.dto.RegisterRequest;
 import pt.ua.tqs.mober.exception.DuplicateEmailException;
 import pt.ua.tqs.mober.model.Role;
 import pt.ua.tqs.mober.model.User;
-import pt.ua.tqs.mober.model.UserStatus;
 import pt.ua.tqs.mober.repository.UserRepository;
 import pt.ua.tqs.mober.security.JwtService;
 
@@ -123,17 +122,6 @@ class AuthServiceTest {
 
         when(userRepository.findByEmail("andre@mober.pt")).thenReturn(Optional.of(sampleUser));
         when(passwordEncoder.matches("WrongPassword", "encoded_secret")).thenReturn(false);
-
-        assertThrows(BadCredentialsException.class, () -> authService.login(request));
-    }
-
-    @Test
-    void loginSuspendedAccountThrowsBadCredentials() {
-        sampleUser.setStatus(UserStatus.SUSPENDED);
-        LoginRequest request = new LoginRequest("andre@mober.pt", "SecurePass123!");
-
-        when(userRepository.findByEmail("andre@mober.pt")).thenReturn(Optional.of(sampleUser));
-        when(passwordEncoder.matches("SecurePass123!", "encoded_secret")).thenReturn(true);
 
         assertThrows(BadCredentialsException.class, () -> authService.login(request));
     }

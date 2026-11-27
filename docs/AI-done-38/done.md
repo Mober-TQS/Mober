@@ -3,20 +3,27 @@
 > **História Jira:** `SCRUM-38` (`US-ADM-03: Gestão de Contas de Utilizadores, Permissões (RBAC) e Autenticação`)  
 > **Épico Jira:** `SCRUM-29` (`ÉPICO 1: Gestão de Utilizadores e Autenticação`)  
 > **Branch de Trabalho:** `SCRUM-38-user-management-and-auth`  
-> **Prática SQA Cumprida:** `AI4 (Specification-driven generation)` a partir de `docs/specs/SCRUM-38-user-auth.feature`  
-> **Estado do Build:** `BUILD SUCCESS` (32 testes passados, 0 falhas, 0 erros)  
-> **Cobertura de Código (JaCoCo):** **90.87%** de instruções, **88.79%** de linhas, **100%** de classes  
+> **Prática SQA Cumprida:** `AI4 (Specification-driven generation)` a partir de `docs/specs/SCRUM-38-user-auth.feature` (atualizado após feedback de equipa)  
+> **Estado do Build:** `BUILD SUCCESS` (24 testes passados, 0 falhas, 0 erros)  
+> **Cobertura de Código (JaCoCo):** **90.44%** de instruções, **88.00%** de linhas, **100%** de classes  
 
 ---
 
 ## 1. Visão Geral da Solução
 
-O objetivo desta implementação foi construir de raiz o módulo completo e seguro de **autenticação, gestão de utilizadores e controlo de acessos por perfil (RBAC — Role-Based Access Control)** no backend em **Spring Boot 4 / Java 21**, garantindo que:
-1. O registo de novos utilizadores é validado e as passwords são cifradas com **BCrypt** (nunca em texto limpo).
+O objetivo desta implementação foi construir de raiz o módulo completo e seguro de **autenticação, gestão de utilizadores e controlo de acessos por perfil (RBAC — Role-Based Access Control)** no backend em **Spring Boot 4 / Java 21**, em total conformidade com a especificação BDD em Gherkin ([`SCRUM-38-user-auth.feature`](file:///home/margarida/Desktop/TQS-project/M-ber/docs/specs/SCRUM-38-user-auth.feature)):
+1. O registo de novos utilizadores valida campos obrigatórios, formato de email e tamanho mínimo de password, cifrando as palavras-passe com **BCrypt** (nunca em texto limpo) e definindo o estado inicial como `ACTIVE`.
 2. A autenticação (login) emite **JSON Web Tokens (JWT)** assinados digitalmente com HMAC SHA-256 e tempo de expiração configurado.
 3. Os endpoints da API REST são protegidos em conformidade com o perfil ativo do utilizador (`ROLE_COURIER`, `ROLE_OPERATOR`, `ROLE_ADMIN`).
-4. Utilizadores com o estado `SUSPENDED` são impedidos de iniciar sessão.
-5. Operações administrativas (listar utilizadores e suspender contas) são restritas estritamente a administradores (`ROLE_ADMIN`).
+4. Utilizadores autenticados acedem em segurança ao seu próprio perfil (`/api/users/me`), sem exposição de hashes de palavras-passe.
+5. Endpoints administrativos (`/api/users/**`) são estritamente protegidos, bloqueando utilizadores sem privilégios administrativos (`ROLE_COURIER`) com código HTTP `403 Forbidden`.
+
+> **Nota de Alinhamento com a Especificação (Feedback da Equipa):**
+> De acordo com a revisão da história `SCRUM-38`, foram removidos os 3 cenários fora do âmbito desta entrega:
+> - Rejeição de login de contas suspensas;
+> - Listagem de utilizadores pelo administrador;
+> - Suspensão de contas de utilizadores pelo administrador.
+> O código de produção e o conjunto de testes foram rigorosamente reajustados para espelhar apenas a especificação ativa.
 
 ---
 
@@ -28,13 +35,13 @@ Localização: `src/main/java/pt/ua/tqs/mober/model` e `pt/ua/tqs/mober/reposito
 * **`Role.java` (Enum):**
   * Define os 3 perfis do sistema Möber: `ROLE_COURIER` (estafeta), `ROLE_OPERATOR` (técnico de manutenção/recolha) e `ROLE_ADMIN` (administrador do sistema).
 * **`UserStatus.java` (Enum):**
-  * Define o ciclo de vida da conta: `ACTIVE` (conta ativa e operacional) e `SUSPENDED` (conta bloqueada pelo administrador em caso de incumprimento).
+  * Define o ciclo de vida base da conta: `ACTIVE` (padrão) e `SUSPENDED`.
 * **`User.java` (Entidade JPA):**
   * Tabela `users` com os campos:
     * `id`: Chave primária auto-gerada (`GenerationType.IDENTITY`).
     * `name`: Nome do utilizador (`nullable = false`).
     * `email`: Endereço único (`unique = true, nullable = false`).
-    * `password`: Hash da palavra-passe (`nullable = false`).
+    * `password`: Hash da palavra-passe cifrada com BCrypt (`nullable = false`).
     * `role`: Perfil mapeado como String (`@Enumerated(EnumType.STRING)`).
     * `status`: Estado da conta (padrão: `ACTIVE`).
     * `createdAt`: Timestamp de registo imutável (`updatable = false`).
@@ -55,7 +62,7 @@ Localização: `src/main/java/pt/ua/tqs/mober/security`
   * **Regras de Autorização de Rotas (`SecurityFilterChain`):**
     * Rotas públicas (`permitAll`): `/api/auth/**` (registo e login), `/api/status`, `/v3/api-docs/**`, `/swagger-ui/**`.
     * Perfil pessoal (`authenticated`): `/api/users/me` (qualquer utilizador com token válido pode ver o seu próprio perfil).
-    * Gestão administrativa (`hasAuthority("ROLE_ADMIN")`): `/api/users/**` (apenas administradores podem listar contas ou alterar o estado de utilizadores).
+    * Rotas administrativas (`hasAuthority("ROLE_ADMIN")`): `/api/users`, `/api/users/**` (apenas administradores).
     * Restantes rotas: requerem autenticação por defeito.
   * Injeta o `JwtAuthenticationFilter` antes do `UsernamePasswordAuthenticationFilter` nativo do Spring.
 
@@ -72,8 +79,8 @@ Localização: `src/main/java/pt/ua/tqs/mober/security`
 * **`JwtAuthenticationFilter.java` (Filtro por Pedido HTTP):**
   * Extende `OncePerRequestFilter` para garantir uma única execução por pedido.
   * Lê o cabeçalho `Authorization`. Se começar por `Bearer <token>`, extrai o token.
-  * Extrai o email e verifica se o utilizador existe na base de dados e se está no estado `ACTIVE`.
-  * Se o token for válido e o utilizador estiver ativo, cria um `UsernamePasswordAuthenticationToken` com a autoridade correspondente à sua `Role` e regista-o no `SecurityContextHolder`.
+  * Extrai o email e verifica se o utilizador existe na base de dados.
+  * Se o token for válido, cria um `UsernamePasswordAuthenticationToken` com a autoridade correspondente à sua `Role` e regista-o no `SecurityContextHolder`.
 
 ---
 
@@ -87,8 +94,7 @@ Localização: `src/main/java/pt/ua/tqs/mober/dto`
   * `role`: Campo opcional (se for omitido, assume por defeito `ROLE_COURIER`).
 * **`LoginRequest.java`:** Record com `email` e `password` não nulos.
 * **`AuthResponse.java`:** Devolve o `token`, o tipo (`Bearer`), o `id`, `name`, `email` e `role`.
-* **`UserResponse.java`:** DTO seguro para devolução de perfis e listagens, omitindo terminantemente o campo da password.
-* **`UpdateStatusRequest.java`:** Record com `@NotNull UserStatus status` para atualizar o estado de uma conta.
+* **`UserResponse.java`:** DTO seguro para devolução do perfil de utilizador, omitindo terminantemente a password.
 
 ---
 
@@ -99,17 +105,14 @@ Localização: `src/main/java/pt/ua/tqs/mober/service`
   * **`register(RegisterRequest)`:**
     1. Verifica se o email já existe através de `userRepository.existsByEmail`. Caso exista, lança `DuplicateEmailException` (HTTP 409 Conflict).
     2. Encripta a password com `passwordEncoder.encode(request.password())`.
-    3. Cria e persiste a nova entidade `User` com estado `ACTIVE`.
+    3. Cria e persiste a nova entidade `User` com estado `ACTIVE` e a role indicada.
     4. Gera e devolve o token JWT com `AuthResponse`.
   * **`login(LoginRequest)`:**
     1. Procura o utilizador por email; se não encontrar, lança `BadCredentialsException` (HTTP 401).
     2. Valida a password fornecida contra a hash da base de dados com `passwordEncoder.matches`. Se falhar, lança `BadCredentialsException` (HTTP 401).
-    3. Valida se a conta está no estado `ACTIVE`. Se estiver `SUSPENDED`, lança `BadCredentialsException` (HTTP 401).
-    4. Gera o token JWT e devolve os dados de sessão.
+    3. Gera o token JWT e devolve os dados de sessão.
 * **`UserService.java`:**
   * **`getProfile(String email)`:** Devolve os dados do utilizador autenticado em formato `UserResponse`.
-  * **`getAllUsers()`:** Lista todos os utilizadores da plataforma em formato `UserResponse` (para a visão do admin).
-  * **`updateUserStatus(Long id, UserStatus newStatus)`:** Altera o estado do utilizador (ex.: de `ACTIVE` para `SUSPENDED`).
 
 ---
 
@@ -120,9 +123,7 @@ Localização: `src/main/java/pt/ua/tqs/mober/controller` e `pt/ua/tqs/mober/exc
   * `POST /api/auth/register` $\rightarrow$ Valida com `@Valid`, cria a conta e retorna `201 Created` com o JWT.
   * `POST /api/auth/login` $\rightarrow$ Valida as credenciais e retorna `200 OK` com o JWT.
 * **`UserController.java` (`/api/users`):**
-  * `GET /api/users/me` $\rightarrow$ Retorna o perfil do utilizador identificado pelo token no contexto de segurança (`Authentication`).
-  * `GET /api/users` $\rightarrow$ Retorna a lista de utilizadores (protegido pelo `SecurityConfig` para `ROLE_ADMIN`).
-  * `PATCH /api/users/{id}/status` $\rightarrow$ Atualiza o estado da conta (protegido para `ROLE_ADMIN`).
+  * `GET /api/users/me` $\rightarrow$ Retorna o perfil do utilizador autenticado através do contexto de segurança (`Authentication`).
 * **`GlobalExceptionHandler.java` (`@RestControllerAdvice`):**
   * `MethodArgumentNotValidException` $\rightarrow$ Retorna `400 Bad Request` com mapa detalhado dos campos inválidos.
   * `DuplicateEmailException` $\rightarrow$ Retorna `409 Conflict`.
@@ -134,18 +135,17 @@ Localização: `src/main/java/pt/ua/tqs/mober/controller` e `pt/ua/tqs/mober/exc
 
 ## 3. Explicação Detalhada da Suíte de Testes
 
-Alinhado com as exigências de TQS e a especificação BDD, foram implementados testes unitários (com Mockito) e testes de integração com subida do contexto real da aplicação (com MockMvc).
+A suíte foi rigorosamente alinhada com os cenários da especificação BDD, eliminando os testes dos cenários descontinuados.
 
 ### 3.1. Testes Unitários de Serviços e Segurança
 
-* **`AuthServiceTest.java` (7 testes — JUnit 5 + Mockito):**
-  * `registerSuccess`: Testa o fluxo feliz de registo, garantindo que o `userRepository.save` e a encriptação de password são chamados e que é emitido um JWT.
-  * `registerWithNullRoleDefaultsToCourier`: Garante que se o perfil for omitido no registo, a aplicação atribui por omissão `ROLE_COURIER`.
+* **`AuthServiceTest.java` (6 testes — JUnit 5 + Mockito):**
+  * `registerSuccess`: Testa o fluxo feliz de registo, garantindo a encriptação BCrypt, a persistência e a emissão do JWT.
+  * `registerWithNullRoleDefaultsToCourier`: Garante que, se o perfil for omitido no registo, a aplicação atribui por omissão `ROLE_COURIER`.
   * `registerDuplicateEmailThrowsException`: Garante que tentar registar um email já existente lança `DuplicateEmailException` e não grava nada na BD.
   * `loginSuccess`: Simula a pesquisa do utilizador, a comparação com BCrypt e a emissão do token JWT.
   * `loginUserNotFoundThrowsBadCredentials`: Garante que email inexistente lança `BadCredentialsException`.
   * `loginWrongPasswordThrowsBadCredentials`: Garante que password errada lança `BadCredentialsException`.
-  * `loginSuspendedAccountThrowsBadCredentials`: Garante que um utilizador com estado `SUSPENDED` é bloqueado no login.
 
 * **`JwtServiceTest.java` (4 testes — JUnit 5):**
   * `generateTokenAndExtractClaims`: Testa a geração de um token e verifica que `extractEmail` e `extractRole` devolvem exatamente os dados originais.
@@ -153,17 +153,15 @@ Alinhado com as exigências de TQS e a especificação BDD, foram implementados 
   * `isTokenValidReturnsFalseForDifferentUser`: Garante que a validação falha para um utilizador diferente.
   * `isTokenValidReturnsFalseForMalformedToken`: Garante que tokens adulterados ou mal formados são rejeitados de imediato.
 
-* **`UserServiceTest.java` (5 testes — JUnit 5 + Mockito):**
-  * `getProfileSuccess` e `getProfileNotFoundThrowsException`: Validação de obtenção de perfil e tratamento de utilizador inexistente.
-  * `getAllUsersReturnsList`: Testa a conversão de lista de entidades `User` para lista de DTOs `UserResponse`.
-  * `updateUserStatusSuccess`: Testa a alteração de estado para `SUSPENDED`.
-  * `updateUserStatusNotFoundThrowsException`: Valida tentativa de atualizar utilizador inexistente.
+* **`UserServiceTest.java` (2 testes — JUnit 5 + Mockito):**
+  * `getProfileSuccess`: Validação da obtenção do próprio perfil de utilizador.
+  * `getProfileNotFoundThrowsException`: Validação de tratamento em caso de utilizador não encontrado no repositório.
 
 ---
 
 ### 3.2. Testes de Integração de API e Segurança (MockMvc)
 
-* **`AuthControllerIntegrationTest.java` (8 testes — `@SpringBootTest` + `@AutoConfigureMockMvc`):**
+* **`AuthControllerIntegrationTest.java` (7 testes — `@SpringBootTest` + `@AutoConfigureMockMvc`):**
   * `registerSuccess`: Dispara um `POST /api/auth/register` HTTP real contra o MockMvc e valida status `201 Created` e retorno do JWT Bearer.
   * `registerWithInvalidEmailFailsWith400`: Testa validação com email mal formatado e verifica mensagem de erro do campo no JSON.
   * `registerWithBlankNameFailsWith400`: Testa validação com nome vazio.
@@ -171,15 +169,11 @@ Alinhado com as exigências de TQS e a especificação BDD, foram implementados 
   * `registerDuplicateEmailFailsWith409`: Guarda previamente um utilizador na BD H2 em memória e dispara um segundo registo com o mesmo email, verificando o status `409 Conflict`.
   * `loginSuccess`: Dispara `POST /api/auth/login` com credenciais válidas e verifica status `200 OK` e dados do token.
   * `loginWithWrongPasswordFailsWith401`: Dispara login com password errada e verifica status `401 Unauthorized`.
-  * `loginWithSuspendedAccountFailsWith401`: Testa login com conta em estado `SUSPENDED` e verifica rejeição com status `401 Unauthorized`.
 
-* **`UserControllerSecurityIntegrationTest.java` (6 testes — RBAC e Proteção de Endpoints):**
+* **`UserControllerSecurityIntegrationTest.java` (3 testes — RBAC e Proteção de Endpoints):**
   * `getMeWithoutTokenReturnsUnauthorized`: Tenta aceder a `GET /api/users/me` sem cabeçalho Authorization e verifica retorno de `401 Unauthorized`.
   * `getMeWithCourierTokenReturnsProfile`: Envia cabeçalho `Authorization: Bearer <token_courier>` e valida acesso com status `200 OK`, confirmando que a password não é devolvida no JSON.
-  * `getAllUsersWithCourierTokenReturnsForbidden`: Um utilizador comum (`COURIER`) tenta aceder a `GET /api/users` e o Spring Security bloqueia com `403 Forbidden`.
-  * `getAllUsersWithAdminTokenReturnsUserList`: Um utilizador administrador (`ADMIN`) acede a `GET /api/users` e obtém `200 OK` com a listagem de todos os utilizadores.
-  * `updateUserStatusWithCourierTokenReturnsForbidden`: Um utilizador `COURIER` tenta suspender outro utilizador e é bloqueado com `403 Forbidden`.
-  * `updateUserStatusWithAdminTokenSuccess`: Um administrador envia `PATCH /api/users/{id}/status` com `SUSPENDED` e o pedido é aceite com `200 OK`, atualizando a base de dados.
+  * `getAllUsersWithCourierTokenReturnsForbidden`: Um utilizador estafeta (`ROLE_COURIER`) tenta aceder ao endpoint administrativo `GET /api/users` e o Spring Security bloqueia com `403 Forbidden`.
 
 * **`StatusEndpointTest.java` & `MoberBackendApplicationTests.java` (2 testes):**
   * Validação do endpoint `/api/status` e carregamento integral do contexto Spring da aplicação.
@@ -192,23 +186,24 @@ Após a execução completa de `./mvnw clean verify`:
 
 | Métrica | Cobertura Obtida | Limiar Exigido (TQS) | Estado |
 | :--- | :---: | :---: | :---: |
-| **Instruções (Bytecode)** | **90.87%** (886/975) | $\ge$ 80% | **APROVADO** |
-| **Linhas de Código** | **88.79%** (198/223) | $\ge$ 80% | **APROVADO** |
-| **Branches de Decisão** | **75.00%** (21/28) | — | **APROVADO** |
+| **Instruções (Bytecode)** | **90.44%** (880/973) | $\ge$ 80% | **APROVADO** |
+| **Linhas de Código** | **88.00%** (198/225) | $\ge$ 80% | **APROVADO** |
+| **Branches de Decisão** | **73.08%** (19/26) | — | **APROVADO** |
 | **Classes Cobertas** | **100.00%** (20/20) | — | **APROVADO** |
 
-O relatório JaCoCo foi gerado em `backend/target/site/jacoco/jacoco.xml`, pronto para ser consumido pela ação de análise do **SonarCloud** no GitHub Actions.
+O relatório JaCoCo foi atualizado em `backend/target/site/jacoco/jacoco.xml`, pronto para análise do **SonarCloud** no GitHub Actions.
 
 ---
 
-## 5. Mapeamento com as Subtarefas do Jira (História SCRUM-38)
+## 5. Mapeamento 1-para-1 com os Cenários BDD (`SCRUM-38-user-auth.feature`)
 
-Todas as subtarefas planeadas no Jira encontram-se concluídas:
-
-1. `Configuração de dependências e segurança (Spring Security & JWT)` $\longrightarrow$ **Concluído** (`pom.xml` atualizado com Spring Security, JPA, Validation, H2 e JJWT).
-2. `Modelo de dados: Entidade User, Enum Role e Repositório JPA` $\longrightarrow$ **Concluído** (`User.java`, `Role.java`, `UserStatus.java`, `UserRepository.java`).
-3. `Serviço de autenticação e filtros JWT (BCrypt e RBAC)` $\longrightarrow$ **Concluído** (`JwtService.java`, `JwtAuthenticationFilter.java`, `SecurityConfig.java`).
-4. `Endpoints REST de registo e login com validação de dados` $\longrightarrow$ **Concluído** (`AuthController.java`, `RegisterRequest.java`, `LoginRequest.java`, `AuthResponse.java`).
-5. `Endpoints de gestão de utilizadores e suspensão de contas (Admin)` $\longrightarrow$ **Concluído** (`UserController.java`, `UserService.java`, `UserResponse.java`).
-6. `Testes unitários de serviços e segurança JWT (Mockito)` $\longrightarrow$ **Concluído** (16 testes unitários em `AuthServiceTest`, `JwtServiceTest`, `UserServiceTest`).
-7. `Testes de integração de API e controlo de acessos (MockMvc)` $\longrightarrow$ **Concluído** (14 testes de integração em `AuthControllerIntegrationTest`, `UserControllerSecurityIntegrationTest`).
+| Cenário BDD no Feature File | Teste Automatizado Correspondente | Tipo |
+| :--- | :--- | :---: |
+| `Successful user registration with encrypted password` | `AuthControllerIntegrationTest.registerSuccess` | Integração (MockMvc) |
+| `Registration rejection due to invalid input data` | `AuthControllerIntegrationTest.registerWith*FailsWith400` | Integração (MockMvc) |
+| `Registration rejection due to duplicate email` | `AuthControllerIntegrationTest.registerDuplicateEmailFailsWith409` | Integração (MockMvc) |
+| `Successful login returns JWT token containing role` | `AuthControllerIntegrationTest.loginSuccess` | Integração (MockMvc) |
+| `Login rejection with incorrect password` | `AuthControllerIntegrationTest.loginWithWrongPasswordFailsWith401` | Integração (MockMvc) |
+| `Unauthenticated request to protected endpoints is rejected` | `UserControllerSecurityIntegrationTest.getMeWithoutTokenReturnsUnauthorized` | Integração (RBAC) |
+| `Authenticated user accesses their own profile` | `UserControllerSecurityIntegrationTest.getMeWithCourierTokenReturnsProfile` | Integração (RBAC) |
+| `Non-admin user is forbidden from accessing administrative endpoints` | `UserControllerSecurityIntegrationTest.getAllUsersWithCourierTokenReturnsForbidden` | Integração (RBAC) |

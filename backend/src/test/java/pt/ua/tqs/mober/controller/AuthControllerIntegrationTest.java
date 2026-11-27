@@ -14,7 +14,6 @@ import pt.ua.tqs.mober.dto.LoginRequest;
 import pt.ua.tqs.mober.dto.RegisterRequest;
 import pt.ua.tqs.mober.model.Role;
 import pt.ua.tqs.mober.model.User;
-import pt.ua.tqs.mober.model.UserStatus;
 import pt.ua.tqs.mober.repository.UserRepository;
 
 import static org.hamcrest.Matchers.*;
@@ -124,20 +123,6 @@ class AuthControllerIntegrationTest {
         userRepository.save(user);
 
         LoginRequest request = new LoginRequest("carlos@mober.pt", "WrongPassword");
-
-        mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void loginWithSuspendedAccountFailsWith401() throws Exception {
-        User user = new User("Carlos", "carlos@mober.pt", passwordEncoder.encode("ValidPass123!"), Role.ROLE_OPERATOR);
-        user.setStatus(UserStatus.SUSPENDED);
-        userRepository.save(user);
-
-        LoginRequest request = new LoginRequest("carlos@mober.pt", "ValidPass123!");
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
