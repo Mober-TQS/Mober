@@ -7,11 +7,11 @@
 * **Ocupação:** Administradora da Plataforma e Gestora de Operações da Mober
 * **Perfil Tecnológico:** Utilizadora avançada de backoffice web em computador; gere a configuração técnica, o inventário total da frota, as contas de utilizadores/funcionários e os indicadores globais do negócio.
 * **Contexto e Motivação:**
-  Como a Mober é a empresa proprietária da plataforma e da frota, a equipa de administração precisa de um backoffice central para gerir tudo o que está acima da operação diária de rua: expandir a rede (registar novos hubs e novas bicicletas), retirar veículos em fim de vida (`Retired`), criar contas e permissões (*roles*) para novos operadores de terreno, configurar os preços/cauções do serviço contínuo e supervisionar a saúde global da plataforma, da telemetria e do cumprimento dos SLAs.
+  Como a Mober é a empresa proprietária da plataforma e da frota, a equipa de administração precisa de um backoffice central para gerir tudo o que está acima da operação diária de rua: expandir a rede (registar novos hubs e novas bicicletas), retirar veículos em fim de vida (`Retired`), criar contas e permissões (*roles*) para novos operadores de terreno, configurar o preço por quilómetro e as cauções e supervisionar a saúde global da plataforma, da telemetria e do cumprimento dos SLAs.
 * **Objetivos:**
   * Gerir o catálogo completo de hubs e veículos ao longo de todo o seu ciclo de vida (`Available`, `Reserved`, `In Use`, `Maintenance`, `Retired`).
   * Supervisionar se os tickets de manutenção estão a ser assumidos e resolvidos dentro do SLA (24 a 48 horas).
-  * Controlar acessos, contas de funcionários e regras de negócio/preços (caução, turno contínuo, *overtime*).
+  * Controlar acessos, contas de funcionários e regras de negócio/preços (caução, preço por km).
   * Monitorizar métricas globais de utilização e a estabilidade técnica da plataforma (API e telemetria).
 * **Frustrações / Dores:**
   * Tickets urgentes ficarem esquecidos sem nenhum operador de terreno os assumir a tempo do SLA.
@@ -37,7 +37,7 @@
    Durante a tarde, a Administradora revê os tickets de manutenção. Vê que o operador Carlos sinalizou uma bicicleta cujo quadro partiu e não tem arranjo. A Administradora abre a ficha desse veículo e altera o seu estado definitivamente para **`Retired`**, retirando-o de circulação para que nunca mais possa ser reservado.
 
 5. **Ajuste de Tarifas e Parâmetros do Serviço (17:00):**
-   Para ajustar a operação, acede às configurações comerciais e atualiza os parâmetros do serviço (como o valor da caução, tarifa de turno contínuo e taxa de *overtime* ou limites operacionais), que passam a ser aplicados automaticamente às novas sessões dos estafetas.
+   Para ajustar a operação, acede às configurações comerciais e atualiza os parâmetros do serviço (como o valor da caução e o preço por quilómetro), que passam a ser aplicados automaticamente às novas sessões dos estafetas.
 
 ---
 
@@ -64,5 +64,5 @@
 | **US-ADM-01** | Passo 2 & 4 | **Como** administrador da Mober, **quero** registar novos hubs e novos veículos no sistema, bem como ativar ou retirar definitivamente bicicletas (`Retired`), **para** gerir o inventário total da frota. | • Permite criar hub (nome, localização, capacidade) e bicicleta (ID, hub inicial, bateria).<br>• Permite desativar temporariamente ou passar permanentemente para `Retired` (nunca mais reservável). |
 | **US-ADM-02** | Passo 4 & Extra 1 | **Como** administrador da Mober, **quero** supervisionar todos os tickets abertos (por reportes ou telemetria) e gerir exceções urgentes, **para** garantir que nenhum ticket fica esquecido e os SLAs são cumpridos. | • Mostra todos os tickets (em aberto, assumidos e fechados) e alertas visuais para tickets em risco de violar o SLA.<br>• Permite criar ticket manual ou atribuir em casos excecionais/urgentes. |
 | **US-ADM-03** | Passo 3 & Extra 2 | **Como** administrador da Mober, **quero** gerir contas de utilizadores, funcionários e respetivas permissões (*roles*), **para** controlar quem acede às funcionalidades de estafeta, operador de terreno ou admin. | • Permite criar contas de operadores/técnicos e gerir *roles* (RBAC).<br>• Permite suspender/bloquear contas em caso de incumprimento. |
-| **US-ADM-04** | Passo 5 | **Como** administrador da Mober, **quero** configurar os valores de caução, tarifas de serviço contínuo, taxas de *overtime* e regras operacionais, **para** manter o modelo comercial e operacional da empresa atualizado. | • Permite definir valor da caução, preço do serviço e parâmetros operacionais.<br>• Novas sessões/reservas aplicam os valores configurados. |
+| **US-ADM-04** | Passo 5 | **Como** administrador da Mober, **quero** configurar os valores de caução, o preço por quilómetro e regras operacionais, **para** manter o modelo comercial e operacional da empresa atualizado. | • Permite definir valor da caução, preço por km e parâmetros operacionais.<br>• Novas sessões/reservas aplicam os valores configurados. |
 | **US-ADM-05** | Passo 1 & Extra 3 | **Como** administrador da Mober, **quero** monitorizar num painel global a disponibilidade da frota, KPIs e a saúde técnica da plataforma, **para** detetar falhas de sistema ou de telemetria rapidamente. | • Painel apresenta contagens globais de veículos por estado, taxa de resolução de tickets e métricas técnicas (latência da API, taxa de erro, *lag* de telemetria). |
